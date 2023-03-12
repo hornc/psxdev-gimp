@@ -197,7 +197,7 @@ query ()
 		"Daniel Balster <dbalster@psxdev.de>",
 		"1999",
 		"<Image>/PSX/Make CLUT",
-		"GIMP_RGB",
+		"RGB",
 		GIMP_PLUGIN,
 		nmakeclut_args, 0, makeclut_args, NULL);
 
@@ -219,7 +219,7 @@ query ()
 		"Daniel Balster <dbalster@psxdev.de>",
 		"1999",
 		"<Image>/PSX/Set CLUT",
-		"GIMP_INDEXED",
+		"INDEXED",
 		GIMP_PLUGIN,
 		nsetclut_args, 0, setclut_args, NULL);
 
@@ -242,7 +242,7 @@ query ()
                           "Andrew Kieschnick",
                           "1998",
                           "<Save>/TIM",
-			  "GIMP_RGB, GIMP_GRAY, GIMP_INDEXED", 
+			  "RGB, GRAY, INDEXED",
                           GIMP_PLUGIN,
                           nsave_args, 0,
                           save_args, NULL);
