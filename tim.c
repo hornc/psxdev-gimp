@@ -443,7 +443,7 @@ printf("\n\n");
 				if (chk<32) continue;
 
 				filename = g_strdup_printf("%s/palettes/CLUT:%05d",
-				NULL,(int)count);
+				gimp_directory(), (int)count);
 
 				file = fopen(filename,"w+");
 				g_free (filename);
