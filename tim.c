@@ -77,9 +77,9 @@ struct tim_clut
 static void   query      (void);
 static void   run        (char    *name,
                           int      nparams,
-                          GParam  *param,
+                          GimpParam  *param,
                           int     *nreturn_vals,
-                          GParam **return_vals);
+                          GimpParam **return_vals);
 static gint32 load_image (char   *filename);
 static gint   save_image (char   *filename,
 			  gint32  image_ID,
@@ -94,7 +94,7 @@ static gint   save_image (char   *filename,
 //static void   save_toggle_update   (GtkWidget *widget,
 //				    gpointer   data);
 
-GPlugInInfo PLUG_IN_INFO =
+GimpPlugInInfo PLUG_IN_INFO =
 {
   NULL,    /* init_proc */
   NULL,    /* quit_proc */
@@ -108,63 +108,63 @@ MAIN ();
 static void
 query ()
 {
-	static GParamDef loadvram_args[] =
+	static GimpParamDef loadvram_args[] =
 	{
-		{ PARAM_INT32, "run_mode", "Interactive, non-interactive" },
+		{ GIMP_PDB_INT32, "run_mode", "Interactive, non-interactive" },
 	};
 	gint nloadvram_args = sizeof (loadvram_args) / sizeof (loadvram_args[0]);
 
-	static GParamDef view_args[] =
+	static GimpParamDef view_args[] =
 	{
-		{ PARAM_INT32, "run_mode", "Interactive, non-interactive" },
-		{ PARAM_IMAGE, "image", "Input image" },
-		{ PARAM_DRAWABLE, "drawable", "Drawable to save" },
+		{ GIMP_PDB_INT32, "run_mode", "Interactive, non-interactive" },
+		{ GIMP_PDB_IMAGE, "image", "Input image" },
+		{ GIMP_PDB_DRAWABLE, "drawable", "Drawable to save" },
 	};
 	gint nview_args = sizeof (view_args) / sizeof (view_args[0]);
 
-	static GParamDef makeclut_args[] =
+	static GimpParamDef makeclut_args[] =
 	{
-		{ PARAM_INT32, "run_mode", "Interactive, non-interactive" },
-		{ PARAM_IMAGE, "image", "Input image" },
-		{ PARAM_DRAWABLE, "drawable", "Drawable to save" },
+		{ GIMP_PDB_INT32, "run_mode", "Interactive, non-interactive" },
+		{ GIMP_PDB_IMAGE, "image", "Input image" },
+		{ GIMP_PDB_DRAWABLE, "drawable", "Drawable to save" },
 	};
 	gint nmakeclut_args = sizeof (makeclut_args) / sizeof (makeclut_args[0]);
-	static GParamDef makemultitexture_args[] =
+	static GimpParamDef makemultitexture_args[] =
 	{
-		{ PARAM_INT32, "run_mode", "Interactive, non-interactive" },
-		{ PARAM_IMAGE, "image", "Input image" },
-		{ PARAM_DRAWABLE, "drawable", "Drawable to save" },
+		{ GIMP_PDB_INT32, "run_mode", "Interactive, non-interactive" },
+		{ GIMP_PDB_IMAGE, "image", "Input image" },
+		{ GIMP_PDB_DRAWABLE, "drawable", "Drawable to save" },
 	};
 	gint nmakemultitexture_args = sizeof (makemultitexture_args) / sizeof (makemultitexture_args[0]);
-	static GParamDef setclut_args[] =
+	static GimpParamDef setclut_args[] =
 	{
-		{ PARAM_INT32, "run_mode", "Interactive, non-interactive" },
-		{ PARAM_IMAGE, "image", "Input image" },
-		{ PARAM_DRAWABLE, "drawable", "Drawable to save" },
+		{ GIMP_PDB_INT32, "run_mode", "Interactive, non-interactive" },
+		{ GIMP_PDB_IMAGE, "image", "Input image" },
+		{ GIMP_PDB_DRAWABLE, "drawable", "Drawable to save" },
 	};
 	gint nsetclut_args = sizeof (setclut_args) / sizeof (setclut_args[0]);
 
 
-  static GParamDef load_args[] =
+  static GimpParamDef load_args[] =
   {
-    { PARAM_INT32, "run_mode", "Interactive, non-interactive" },
-    { PARAM_STRING, "filename", "The name of the file to load" },
-    { PARAM_STRING, "raw_filename", "The name entered" },
+    { GIMP_PDB_INT32, "run_mode", "Interactive, non-interactive" },
+    { GIMP_PDB_STRING, "filename", "The name of the file to load" },
+    { GIMP_PDB_STRING, "raw_filename", "The name entered" },
   };
-  static GParamDef load_return_vals[] =
+  static GimpParamDef load_return_vals[] =
   {
-    { PARAM_IMAGE, "image", "Output image" },
+    { GIMP_PDB_IMAGE, "image", "Output image" },
   };
   static int nload_args = sizeof (load_args) / sizeof (load_args[0]);
   static int nload_return_vals = sizeof (load_return_vals) / sizeof (load_return_vals[0]);
 
-  static GParamDef save_args[] =
+  static GimpParamDef save_args[] =
   {
-    { PARAM_INT32, "run_mode", "Interactive, non-interactive" },
-    { PARAM_IMAGE, "image", "Input image" },
-    { PARAM_DRAWABLE, "drawable", "Drawable to save" },
-    { PARAM_STRING, "filename", "The name of the file to save the image in" },
-    { PARAM_STRING, "raw_filename", "The name of the file to save the image in" },
+    { GIMP_PDB_INT32, "run_mode", "Interactive, non-interactive" },
+    { GIMP_PDB_IMAGE, "image", "Input image" },
+    { GIMP_PDB_DRAWABLE, "drawable", "Drawable to save" },
+    { GIMP_PDB_STRING, "filename", "The name of the file to save the image in" },
+    { GIMP_PDB_STRING, "raw_filename", "The name of the file to save the image in" },
   } ;
   static int nsave_args = sizeof (save_args) / sizeof (save_args[0]);
 
@@ -176,7 +176,7 @@ query ()
 		"1999",
 		"<Image>/PSX/View VRAM",
 		"*",
-		PROC_PLUG_IN,
+		GIMP_PLUGIN,
 		nview_args, 0, view_args, NULL);
 
 	gimp_install_procedure ("psx_import_vram",
@@ -187,18 +187,18 @@ query ()
 		"1999",
 		"<Toolbox>/PSX/Screenshot",
 		"",
-		PROC_EXTENSION,
+		GIMP_EXTENSION,
 		nloadvram_args, 0, loadvram_args, NULL);
 
 	gimp_install_procedure ("psx_make_clut",
-		"create 4-Bit CLUTs from RGB image",
-		"Just apply this to a RGB image sized (16*x)*y pixels. It will write all 16x1 images to your user palettes directory.",
+		"create 4-Bit CLUTs from GIMP_RGB image",
+		"Just apply this to a GIMP_RGB image sized (16*x)*y pixels. It will write all 16x1 images to your user palettes directory.",
 		"Daniel Balster <dbalster@psxdev.de>",
 		"Daniel Balster <dbalster@psxdev.de>",
 		"1999",
 		"<Image>/PSX/Make CLUT",
-		"RGB",
-		PROC_PLUG_IN,
+		"GIMP_RGB",
+		GIMP_PLUGIN,
 		nmakeclut_args, 0, makeclut_args, NULL);
 
 	gimp_install_procedure ("psx_make_multitexture",
@@ -209,18 +209,18 @@ query ()
 		"1999",
 		"<Image>/PSX/Make MultiTexture",
 		"*",
-		PROC_PLUG_IN,
+		GIMP_PLUGIN,
 		nmakemultitexture_args, 0, makemultitexture_args, NULL);
 
 	gimp_install_procedure ("psx_set_clut",
-		"create 4-Bit CLUTs from RGB image",
+		"create 4-Bit CLUTs from GIMP_RGB image",
 		"Overwrites the current palette with the content of the clipboard selection",
 		"Daniel Balster <dbalster@psxdev.de>",
 		"Daniel Balster <dbalster@psxdev.de>",
 		"1999",
 		"<Image>/PSX/Set CLUT",
-		"INDEXED",
-		PROC_PLUG_IN,
+		"GIMP_INDEXED",
+		GIMP_PLUGIN,
 		nsetclut_args, 0, setclut_args, NULL);
 
   gimp_install_procedure ("file_tim_load",
@@ -231,7 +231,7 @@ query ()
                           "1998",
                           "<Load>/TIM",
 			  NULL,
-                          PROC_PLUG_IN,
+                          GIMP_PLUGIN,
                           nload_args, nload_return_vals,
                           load_args, load_return_vals);
 
@@ -242,8 +242,8 @@ query ()
                           "Andrew Kieschnick",
                           "1998",
                           "<Save>/TIM",
-			  "RGB, GRAY, INDEXED", 
-                          PROC_PLUG_IN,
+			  "GIMP_RGB, GIMP_GRAY, GIMP_INDEXED", 
+                          GIMP_PLUGIN,
                           nsave_args, 0,
                           save_args, NULL);
 
@@ -256,21 +256,21 @@ query ()
 static void
 run (char    *name,
      int      nparams,
-     GParam  *param,
+     GimpParam  *param,
      int     *nreturn_vals,
-     GParam **return_vals)
+     GimpParam **return_vals)
 {
-  static GParam values[2];
-  GStatusType status = STATUS_SUCCESS;
-  GRunModeType run_mode;
+  static GimpParam values[2];
+  GimpPDBStatusType status = GIMP_PDB_SUCCESS;
+  GimpRunMode run_mode;
   gint32 image_ID;
 
   run_mode = param[0].data.d_int32;
 
   *nreturn_vals = 1;
   *return_vals = values;
-  values[0].type = PARAM_STATUS;
-  values[0].data.d_status = STATUS_CALLING_ERROR;
+  values[0].type = GIMP_PDB_STATUS;
+  values[0].data.d_status = GIMP_PDB_CALLING_ERROR;
 
   if (strcmp (name, "file_tim_load") == 0)
     {
@@ -279,29 +279,29 @@ run (char    *name,
       if (image_ID != -1)
         {
           *nreturn_vals = 2;
-          values[0].data.d_status = STATUS_SUCCESS;
-          values[1].type = PARAM_IMAGE;
+          values[0].data.d_status = GIMP_PDB_SUCCESS;
+          values[1].type = GIMP_PDB_IMAGE;
           values[1].data.d_image = image_ID;
         }
       else
         {
-          values[0].data.d_status = STATUS_EXECUTION_ERROR;
+          values[0].data.d_status = GIMP_PDB_EXECUTION_ERROR;
         }
     }
   else if (strcmp (name, "file_tim_save") == 0)
     {
       switch (run_mode)
 	{
-	case RUN_INTERACTIVE:
+	case GIMP_RUN_INTERACTIVE:
 	  break;
 
-	case RUN_NONINTERACTIVE:
+	case GIMP_RUN_NONINTERACTIVE:
 	  /*  Make sure all the arguments are there!  */
 	  if (nparams != 5)
-	    status = STATUS_CALLING_ERROR;
+	    status = GIMP_PDB_CALLING_ERROR;
 	  break;
 
-	case RUN_WITH_LAST_VALS:
+	case GIMP_RUN_WITH_LAST_VALS:
 	  break;
 
 	default:
@@ -310,9 +310,9 @@ run (char    *name,
 
       *nreturn_vals = 1;
       if (save_image (param[3].data.d_string, param[1].data.d_int32, param[2].data.d_int32))
-	  values[0].data.d_status = STATUS_SUCCESS;
+	  values[0].data.d_status = GIMP_PDB_SUCCESS;
       else
-	values[0].data.d_status = STATUS_EXECUTION_ERROR;
+	values[0].data.d_status = GIMP_PDB_EXECUTION_ERROR;
     }
 
 //
@@ -331,8 +331,8 @@ run (char    *name,
       if (image_ID != -1)
         {
           *nreturn_vals = 2;
-          values[0].data.d_status = STATUS_SUCCESS;
-          values[1].type = PARAM_IMAGE;
+          values[0].data.d_status = GIMP_PDB_SUCCESS;
+          values[1].type = GIMP_PDB_IMAGE;
           values[1].data.d_image = image_ID;
 		  
 		  gimp_display_new (image_ID);
@@ -340,7 +340,7 @@ run (char    *name,
         }
       else
         {
-          values[0].data.d_status = STATUS_EXECUTION_ERROR;
+          values[0].data.d_status = GIMP_PDB_EXECUTION_ERROR;
         }
   }
 
@@ -371,7 +371,7 @@ printf("\n\n");
 		gint x,y;
 		gimp_drawable_offsets (layers[i],&x,&y);
 		printf ("pnmcut %d %d %d %d source.ppm > tmp.%d.ppm\n"
-			,x,y,gimp_layer_width(layers[i]),gimp_layer_height(layers[i]),i);
+			,x,y,gimp_drawable_width(layers[i]),gimp_drawable_height(layers[i]),i);
 	}
 
 	/* quantization */
@@ -403,10 +403,10 @@ printf("\n\n");
   {
 
   	gint32 drawable_id = param[2].data.d_int32;	
-	GDrawable *drawable = gimp_drawable_get(drawable_id);
+	GimpDrawable *drawable = gimp_drawable_get(drawable_id);
 	int width, height, tileheight, i,j,x,y;
 	guchar *data;
-	GPixelRgn pixel_rgn;
+	GimpPixelRgn pixel_rgn;
 	double full,count=0;
 
 	width = drawable->width;
@@ -443,7 +443,7 @@ printf("\n\n");
 				if (chk<32) continue;
 
 				filename = g_strdup_printf("%s/palettes/CLUT:%05d",
-				gimp_directory(),(int)count);
+				NULL,(int)count);
 
 				file = fopen(filename,"w+");
 				g_free (filename);
@@ -478,7 +478,7 @@ printf("\n\n");
 	gint nimages;
 	gint32 selection=-1;
 
-	images=gimp_query_images(&nimages);
+	images=gimp_image_list(&nimages);
 	if (nimages==0) return;
 	for (i=0;i<nimages;i++)
 	{
@@ -500,9 +500,9 @@ printf("\n\n");
 	}
 
 {
-	GDrawable *drawable = gimp_drawable_get (selection);
+	GimpDrawable *drawable = gimp_drawable_get (selection);
 	int x1,y1,x2,y2;
-	GPixelRgn pixel_rgn;
+	GimpPixelRgn pixel_rgn;
 	
 	if (drawable)
 	{
@@ -532,11 +532,11 @@ load_image (char *filename)
 
   gint32 image_ID = -1;
   gint32 layer_ID;
-  GPixelRgn pixel_rgn;
-  GDrawable *drawable;
+  GimpPixelRgn pixel_rgn;
+  GimpDrawable *drawable;
   guchar *data;
-  GDrawableType dtype;
-  GImageType itype;
+  GimpImageType dtype;
+  GimpImageType itype;
   guchar *cmap;
   
   int width, height, bpp=0;
@@ -578,8 +578,8 @@ load_image (char *filename)
       width=image.w[1]*256+image.w[0];
       height=image.h[1]*256+image.h[0];
 
-      itype = RGB;
-      dtype = RGB_IMAGE;
+      itype = GIMP_RGB;
+      dtype = GIMP_RGB_IMAGE;
 
       image_ID = gimp_image_new (width, height, itype);
       gimp_image_set_filename (image_ID, filename);
@@ -589,7 +589,7 @@ load_image (char *filename)
 				 width, height,
 				 dtype,
 				 100,
-				 NORMAL_MODE);
+				 GIMP_NORMAL_MODE);
       
       gimp_image_add_layer (image_ID, layer_ID, 0);
       
@@ -692,8 +692,8 @@ load_image (char *filename)
   else
     width=width*2;
 
-  itype = INDEXED;
-  dtype = INDEXED_IMAGE;
+  itype = GIMP_INDEXED;
+  dtype = GIMP_INDEXED_IMAGE;
   
   image_ID = gimp_image_new (width, height, itype);
   gimp_image_set_filename (image_ID, filename);
@@ -703,7 +703,7 @@ load_image (char *filename)
 			     width, height,
 			     dtype,
 			     100,
-			     NORMAL_MODE);
+			     GIMP_NORMAL_MODE);
   
   gimp_image_add_layer (image_ID, layer_ID, 0);
   
@@ -802,9 +802,9 @@ save_image (char   *filename,
 	    gint32  image_ID,
 	    gint32  drawable_ID)
 {
-  GPixelRgn pixel_rgn;
-  GDrawable *drawable;
-  GDrawableType dtype;
+  GimpPixelRgn pixel_rgn;
+  GimpDrawable *drawable;
+  GimpImageType dtype;
   guint tmpval;
   int width, height;
   FILE *fp;
@@ -837,7 +837,7 @@ save_image (char   *filename,
 
   switch (dtype)
     {
-    case INDEXED_IMAGE:
+    case GIMP_INDEXED_IMAGE:
       common.type[0] = TIM8;
       clut.next = sizeof(clut);
       image.w[0]=(width/2)%256;
@@ -870,7 +870,7 @@ save_image (char   *filename,
 	}
       pelbytes=1;
       break;
-    case GRAY_IMAGE:
+    case GIMP_GRAY_IMAGE:
       common.type[0] = TIM8;
       clut.next = sizeof(clut);
       image.w[0]=(width/2)%256;
@@ -901,7 +901,7 @@ save_image (char   *filename,
 	}
       pelbytes=1;
       break;
-    case RGB_IMAGE:
+    case GIMP_RGB_IMAGE:
       common.type[0] = TIM16;
       image.next = ((width*height*2)+12);
       image.w[0]=width%256;
