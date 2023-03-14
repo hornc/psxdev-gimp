@@ -191,8 +191,8 @@ query ()
 		nloadvram_args, 0, loadvram_args, NULL);
 
 	gimp_install_procedure ("psx_make_clut",
-		"create 4-Bit CLUTs from GIMP_RGB image",
-		"Just apply this to a GIMP_RGB image sized (16*x)*y pixels. It will write all 16x1 images to your user palettes directory.",
+		"create 4-Bit CLUTs from RGB image",
+		"Just apply this to a RGB image sized (16*x)*y pixels. It will write all 16x1 images to your user palettes directory.",
 		"Daniel Balster <dbalster@psxdev.de>",
 		"Daniel Balster <dbalster@psxdev.de>",
 		"1999",
@@ -213,7 +213,7 @@ query ()
 		nmakemultitexture_args, 0, makemultitexture_args, NULL);
 
 	gimp_install_procedure ("psx_set_clut",
-		"create 4-Bit CLUTs from GIMP_RGB image",
+		"create 4-Bit CLUTs from RGB image",
 		"Overwrites the current palette with the content of the clipboard selection",
 		"Daniel Balster <dbalster@psxdev.de>",
 		"Daniel Balster <dbalster@psxdev.de>",
