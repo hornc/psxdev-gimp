@@ -753,9 +753,9 @@ load_image (char *filename)
 	    for(j=0;j<npels/2;j++)
 	      {
 		fread(&k,1,1,fp); /* read in 1 byte, which is 2 pixels */
-		data[j*2] = k&0x0F; /* low 4 bits */
-		data[j*2+1] = k>>4;   /* high 4 bits */
-		pels+=2;
+		data[j*2] = k & 0x0F; /* low 4 bits */
+		data[j*2+1] = k >> 4 & 0x0F; /* high 4 bits */
+		pels += 2;
 	      }
 	    break;
 	  case TIM8:
