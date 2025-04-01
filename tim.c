@@ -508,9 +508,9 @@ printf("\n\n");
 	{
 		gimp_drawable_mask_bounds (selection,&x1,&y1,&x2,&y2);
 		gimp_pixel_rgn_init (&pixel_rgn, drawable, 0, 0, drawable->width, drawable->height, TRUE, FALSE);
-		palette = gimp_image_get_cmap (image_id,&ncolors);
+		palette = gimp_image_get_colormap (image_id,&ncolors);
 		gimp_pixel_rgn_get_rect (&pixel_rgn,palette,x1,y1,ncolors,1);
-		gimp_image_set_cmap (image_id,palette,ncolors);
+		gimp_image_set_colormap (image_id,palette,ncolors);
 		g_free (palette);
 
 	}
@@ -725,7 +725,7 @@ load_image (char *filename)
       cmap[j*3] = (tmpval&0x1f)<<3;
     }
 
-  gimp_image_set_cmap (image_ID, cmap, ncols);
+  gimp_image_set_colormap (image_ID, cmap, ncols);
   g_free (cmap);
   
   /* Allocate the data. */
@@ -842,7 +842,7 @@ save_image (char   *filename,
       clut.next = sizeof(clut);
       image.w[0]=(width/2)%256;
       image.w[1]=(width/2)>>8;
-      cmap = gimp_image_get_cmap (image_ID, &colors);
+      cmap = gimp_image_get_colormap (image_ID, &colors);
       image.next = (width*height+12);
       clut.colors[0] = colors%256;
       clut.colors[1] = colors>>8;
