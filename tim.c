@@ -27,13 +27,15 @@
  * Bugfix: the "next" field of the chunks only handled 16-bit,
  *         so really big images couldn't be written.
  *
- * TODO
- *   24 bpp support
  */
 
 /*
-	some modifications from dbalster@psxdev.de
-*/
+ * some modifications from dbalster@psxdev.de
+ */
+
+/*
+ *  24 bpp support added by hornc, May 2025.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -574,9 +576,12 @@ load_image (char *filename)
     case TIM8:
       break;
     case TIM16:
+    case TIM24:
       fread( &image, sizeof(image), 1, fp );
-      width=image.w[1]*256+image.w[0];
-      height=image.h[1]*256+image.h[0];
+      width = image.w[1] * 256 + image.w[0];
+      if (common.type[0] == TIM24)
+        width = width * 2 / 3;
+      height = image.h[1] * 256 + image.h[0];
 
       itype = GIMP_RGB;
       dtype = GIMP_RGB_IMAGE;
@@ -598,7 +603,7 @@ load_image (char *filename)
       gimp_pixel_rgn_init (&pixel_rgn, drawable, 0, 0, width, height, TRUE, FALSE);
 
       pelbytes = drawable->bpp; /* bytes per pixel in the gimp */
-      bpp = 2; /* bytes per pixel in the .tim file */
+      bpp = common.type[0]; /* bytes per pixel in the .tim file */
 
       /* Allocate the data. */
       tileheight = gimp_tile_height ();
@@ -622,9 +627,18 @@ load_image (char *filename)
 	    for(k=0;k<npels;k++)
 	      {
 		fread(&j, bpp, 1, fp); /* read 1 pixel into j */
-		data[k*pelbytes+2]   = (j>>10)<<3;
-		data[k*pelbytes+1] = ((j>>5)&0x1f)<<3;
-		data[k*pelbytes] = (j&0x1f)<<3;
+		if (bpp == 2) /* TIM16 */
+		  {
+		    data[k*pelbytes+2] = (j>>10)<<3;
+		    data[k*pelbytes+1] = ((j>>5)&0x1f)<<3;
+		    data[k*pelbytes] = (j&0x1f)<<3;
+		  }
+		else  /* TIM24, bpp == 3 */
+		  {
+		    data[k*pelbytes+2] = j>>16;
+		    data[k*pelbytes+1] = j>>8;
+		    data[k*pelbytes] = j;
+		  }
 		pels++; /* increment # pels read */
 	      }
 	  if (pels != npels)
@@ -658,9 +672,6 @@ load_image (char *filename)
       return image_ID;
 
       break;
-    case TIM24:
-      printf("TIM: 24 bpp unsupported, aborting\n");
-      return -1;
     default:
       printf("TIM: Unknown bitdepth, aborting\n");
       return -1;
