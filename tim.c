@@ -74,8 +74,12 @@ struct tim_clut
   guchar clut[256][2];
 };
 
-/* Declare some local functions.
- */
+struct tim_save_vals {
+  gint tim_type;  /* TIM16 or TIM24 for RGB */
+};
+
+/* Declare some local functions. */
+
 static void   query      (void);
 static void   run        (char    *name,
                           int      nparams,
@@ -84,10 +88,10 @@ static void   run        (char    *name,
                           GimpParam **return_vals);
 static gint32 load_image (char   *filename);
 static gint   save_image (char   *filename,
-			  gint32  image_ID,
-			  gint32  drawable_ID);
-
-//static gint   save_dialog ();
+                          gint32  image_ID,
+                          gint32  drawable_ID);
+static gint save_dialog (struct tim_save_vals *vals,
+                          GimpImageType dtype);
 
 //static void   save_close_callback  (GtkWidget *widget,
 //				    gpointer   data);
@@ -95,6 +99,8 @@ static gint   save_image (char   *filename,
 //				    gpointer   data);
 //static void   save_toggle_update   (GtkWidget *widget,
 //				    gpointer   data);
+
+static struct tim_save_vals timvals = { TIM16 };
 
 GimpPlugInInfo PLUG_IN_INFO =
 {
@@ -271,18 +277,29 @@ run (char    *name,
   else if (strcmp (name, "file_tim_save") == 0)
     {
       switch (run_mode)
-	{
-	case GIMP_RUN_INTERACTIVE:
-	  break;
+        {
+        case GIMP_RUN_INTERACTIVE:
+          {
+            GimpImageType dtype = gimp_drawable_type (param[2].data.d_int32);
+            gimp_get_data ("file-tim-save", &timvals);
+            if (! save_dialog (&timvals, dtype))
+              {
+                *nreturn_vals = 1;
+                values[0].data.d_status = GIMP_PDB_CANCEL;
+                return;
+              }
+          }
+          break;
 
-	case GIMP_RUN_NONINTERACTIVE:
-	  /*  Make sure all the arguments are there!  */
-	  if (nparams != 5)
-	    status = GIMP_PDB_CALLING_ERROR;
-	  break;
+        case GIMP_RUN_NONINTERACTIVE:
+          /*  Make sure all the arguments are there!  */
+          if (nparams != 5)
+            status = GIMP_PDB_CALLING_ERROR;
+          break;
 
-	case GIMP_RUN_WITH_LAST_VALS:
-	  break;
+        case GIMP_RUN_WITH_LAST_VALS:
+          gimp_get_data ("file-tim-save", &timvals);
+          break;
 
 	default:
 	  break;
@@ -753,6 +770,25 @@ load_image (char *filename)
   fclose (fp);
 
   return image_ID;
+}
+
+gint
+save_dialog (struct tim_save_vals *vals,
+	     GimpImageType dtype)
+{
+  GtkWidget *dialog;
+  gint       response;
+  gimp_ui_init ("gimp-psx-tim");
+  dialog = gtk_dialog_new_with_buttons ("Export Image as TIM",
+                                         NULL,
+                                         GTK_DIALOG_MODAL,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK,     GTK_RESPONSE_OK,
+                                         NULL);
+  gtk_widget_show_all (dialog);
+  response = gtk_dialog_run (GTK_DIALOG (dialog));
+  gtk_widget_destroy (dialog);
+  return (response == GTK_RESPONSE_OK);
 }
 
 gint
