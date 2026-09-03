@@ -18,15 +18,16 @@ It splits the `psxdev-gimp-2.0.0` folder out from the fuller dev environment arc
 * libgtk2.0-dev
 * libgimp2.0-dev
 
-## Build the TIM plugin
-Ubuntu/Linux:
 
-    gcc tim.c -o gimp-psx-tim  `pkg-config --cflags --libs gtk+-2.0 gimp-2.0`
+## Build the TIM plugin
+
+    make
+
 
 ## Install the plugin
-Find your plugins folder via the GIMP "Preferences" dialog, under "Folders > Plug-ins".
 
-Copy the output file, `gimp-psx-tim`, to that folder.
+    make install
+
 
 ## PSXDEV original notice
 -------------------------------------------------------------------------
@@ -59,7 +60,7 @@ Copy the output file, `gimp-psx-tim`, to that folder.
 * Andrew Kieschnick <andrewk@cerc.utexas.edu>
 * Kazuki Sakamoto <bsd-ps@geocities.co.jp>
 
- Latest changes 2023, 2025
+ Latest changes 2023, 2025, 2026
 * Charles Horn [@hornc](https://github.com/hornc)	
 
  This program is free software; you can redistribute it and/or modify
