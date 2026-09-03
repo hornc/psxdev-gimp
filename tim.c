@@ -91,7 +91,8 @@ static gint   save_image (char   *filename,
                           gint32  image_ID,
                           gint32  drawable_ID);
 static gint save_dialog (struct tim_save_vals *vals,
-                          GimpImageType dtype);
+                          GimpImageType dtype,
+                          gint32  image_ID);
 
 //static void   save_close_callback  (GtkWidget *widget,
 //				    gpointer   data);
@@ -282,7 +283,7 @@ run (char    *name,
           {
             GimpImageType dtype = gimp_drawable_type (param[2].data.d_int32);
             gimp_get_data ("file-tim-save", &timvals);
-            if (! save_dialog (&timvals, dtype))
+            if (! save_dialog (&timvals, dtype, param[1].data.d_int32))
               {
                 *nreturn_vals = 1;
                 values[0].data.d_status = GIMP_PDB_CANCEL;
@@ -559,15 +560,19 @@ load_image (char *filename)
 				 dtype,
 				 100,
 				 GIMP_NORMAL_MODE);
-      
+
       gimp_image_add_layer (image_ID, layer_ID, 0);
-      
+
       drawable = gimp_drawable_get (layer_ID);
 
       gimp_pixel_rgn_init (&pixel_rgn, drawable, 0, 0, width, height, TRUE, FALSE);
 
       pelbytes = drawable->bpp; /* bytes per pixel in the gimp */
       bpp = common.type[0]; /* bytes per pixel in the .tim file */
+
+      GimpParasite *parasite = gimp_parasite_new ("tim-source-depth", 0, sizeof (common.type[0]), &common.type[0]);
+      gimp_image_attach_parasite (image_ID, parasite);
+      gimp_parasite_free (parasite);
 
       /* Allocate the data. */
       tileheight = gimp_tile_height ();
@@ -613,16 +618,15 @@ load_image (char *filename)
 		  printf ("TIM: error reading\n");
 		  badread = 1;
 		}
-	      
 	      /* Fill the rest of this tile with zeros. */
 	      memset (data + (pels * bpp), 0, ((npels - pels) * bpp));
 	    }
-	  
+
 	  gimp_progress_update ((double) (i + tileheight) / (double) height);
 
 	  gimp_pixel_rgn_set_rect (&pixel_rgn, data, 0, i, width, tileheight);
 	}
-      
+
       if (fgetc (fp) != EOF)
 	printf ("TIM: too much input data, ignoring extra\n");
 
@@ -630,7 +634,7 @@ load_image (char *filename)
 
       gimp_drawable_flush (drawable);
       gimp_drawable_detach (drawable);
-      
+
       fclose(fp);
 
       return image_ID;
@@ -774,9 +778,13 @@ load_image (char *filename)
 
 gint
 save_dialog (struct tim_save_vals *vals,
-	     GimpImageType dtype)
+	     GimpImageType dtype,
+	     gint32 image_ID)
 {
   GtkWidget *dialog;
+  GtkWidget *content_area;
+  GtkWidget *radio_16;
+  GtkWidget *radio_24;
   gint       response;
   gimp_ui_init ("gimp-psx-tim");
   dialog = gtk_dialog_new_with_buttons ("Export Image as TIM",
@@ -785,8 +793,57 @@ save_dialog (struct tim_save_vals *vals,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK,     GTK_RESPONSE_OK,
                                          NULL);
+
+  content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+
+  if (dtype == GIMP_RGB_IMAGE)
+    {
+      GtkWidget *frame;
+      GtkWidget *vbox;
+
+      /* load original source-depth */
+      GimpParasite *parasite = gimp_image_parasite_find (image_ID, "tim-source-depth");
+      if (parasite)
+        {
+          guchar loaded_depth;
+          memcpy (&loaded_depth, gimp_parasite_data (parasite), sizeof (loaded_depth));
+          vals->tim_type = loaded_depth;
+          gimp_parasite_free (parasite);
+        }
+
+      frame = gtk_frame_new ("Color Depth (Full Color)");
+      gtk_container_set_border_width (GTK_CONTAINER (frame), 6);
+      gtk_box_pack_start (GTK_BOX (content_area), frame, FALSE, FALSE, 0);
+
+      vbox = gtk_vbox_new (FALSE, 2);
+      gtk_container_set_border_width (GTK_CONTAINER (vbox), 6);
+      gtk_container_add (GTK_CONTAINER (frame), vbox);
+
+      radio_16 = gtk_radio_button_new_with_label (NULL, "16-bit (TIM16)");
+      gtk_box_pack_start (GTK_BOX (vbox), radio_16, FALSE, FALSE, 0);
+
+      radio_24 = gtk_radio_button_new_with_label_from_widget
+                   (GTK_RADIO_BUTTON (radio_16), "24-bit (TIM24)");
+      gtk_box_pack_start (GTK_BOX (vbox), radio_24, FALSE, FALSE, 0);
+
+      /* preselect based on original depth if known, default = TIM16 */
+      if (vals->tim_type == TIM24)
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (radio_24), TRUE);
+      else
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (radio_16), TRUE);
+    }
+
   gtk_widget_show_all (dialog);
   response = gtk_dialog_run (GTK_DIALOG (dialog));
+
+  if (response == GTK_RESPONSE_OK && dtype == GIMP_RGB_IMAGE)
+    {
+      if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (radio_24)))
+        vals->tim_type = TIM24;
+      else
+        vals->tim_type = TIM16;
+    }
+
   gtk_widget_destroy (dialog);
   return (response == GTK_RESPONSE_OK);
 }
@@ -814,7 +871,7 @@ save_image (char   *filename,
   guchar *cmap;
   int colors;
   int i,j,r,g,b;
-  
+
   drawable = gimp_drawable_get(drawable_ID);
   dtype = gimp_drawable_type(drawable_ID);
   width = drawable->width;
@@ -921,7 +978,6 @@ save_image (char   *filename,
   }
 
   /* write out the various headers */
-
   fwrite(&common, sizeof(common), 1, fp);
   if (common.type[0]==TIM4)
     fwrite(&clut, sizeof(clut)-480, 1, fp);
