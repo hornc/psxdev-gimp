@@ -170,28 +170,6 @@ query ()
   } ;
   static int nsave_args = sizeof (save_args) / sizeof (save_args[0]);
 
-	gimp_install_procedure ("psx_view_vram",
-		"view psx vram",
-		"Just writes a TIM image to /proc/pccl/0/vram",
-		"Daniel Balster <dbalster@psxdev.de>",
-		"Daniel Balster <dbalster@psxdev.de>",
-		"1999",
-		"<Image>/PSX/View VRAM",
-		"*",
-		GIMP_PLUGIN,
-		nview_args, 0, view_args, NULL);
-
-	gimp_install_procedure ("psx_import_vram",
-		"import psx vram",
-		"Just reads a TIM image from /proc/pccl/0/vram",
-		"Daniel Balster <dbalster@psxdev.de>",
-		"Daniel Balster <dbalster@psxdev.de>",
-		"1999",
-		"<Toolbox>/PSX/Screenshot",
-		"",
-		GIMP_EXTENSION,
-		nloadvram_args, 0, loadvram_args, NULL);
-
 	gimp_install_procedure ("psx_make_clut",
 		"create 4-Bit CLUTs from RGB image",
 		"Just apply this to a RGB image sized (16*x)*y pixels. It will write all 16x1 images to your user palettes directory.",
@@ -318,35 +296,6 @@ run (char    *name,
     }
 
 //
-// psx_view_vram
-//
-
-  else if (strcmp (name, "psx_view_vram") == 0)
-  {
-	save_image ("/proc/pccl/0/vram", param[1].data.d_int32, param[2].data.d_int32);
-  }
-
-  else if (strcmp (name, "psx_import_vram") == 0)
-  {
-      image_ID = load_image ("/proc/pccl/0/vram");
-
-      if (image_ID != -1)
-        {
-          *nreturn_vals = 2;
-          values[0].data.d_status = GIMP_PDB_SUCCESS;
-          values[1].type = GIMP_PDB_IMAGE;
-          values[1].data.d_image = image_ID;
-		  
-		  gimp_display_new (image_ID);
-		  gimp_displays_flush();
-        }
-      else
-        {
-          values[0].data.d_status = GIMP_PDB_EXECUTION_ERROR;
-        }
-  }
-
-//
 // the next one creates a script, which composes a multipalette texture
 // (NetPBM needed)
 //
@@ -393,8 +342,6 @@ printf("\n\n");
 	}
 	printf ("\n");
 	printf ("rm tmp.*\n");
-
-
   }
 
 //
@@ -705,7 +652,7 @@ load_image (char *filename)
 
   itype = GIMP_INDEXED;
   dtype = GIMP_INDEXED_IMAGE;
-  
+
   image_ID = gimp_image_new (width, height, itype);
   gimp_image_set_filename (image_ID, filename);
   
@@ -785,24 +732,24 @@ load_image (char *filename)
 	      printf ("TIM: error reading\n");
 	      badread = 1;
 	    }
-	  
+
 	  /* Fill the rest of this tile with zeros. */
 	  memset (data + (pels * bpp), 0, ((npels - pels) * bpp));
 	}
-      
+
       gimp_progress_update ((double) (i + tileheight) / (double) height);
-      
+
       gimp_pixel_rgn_set_rect (&pixel_rgn, data, 0, i, width, tileheight);
     }
-  
+
   if (fgetc (fp) != EOF)
     printf ("TIM: too much input data, ignoring extra\n"); /* this seems to happen a lot */
-  
+
   g_free (data);
-  
+
   gimp_drawable_flush (drawable);
   gimp_drawable_detach (drawable);
-  
+
   fclose (fp);
 
   return image_ID;
@@ -959,10 +906,10 @@ save_image (char   *filename,
       /* Get a horizontal slice of the image. */
       tileheight = MIN(tileheight, height - i);
       gimp_pixel_rgn_get_rect(&pixel_rgn, data, 0, i, width, tileheight);
-      
+
       npels = width * tileheight;
       bsize = npels * pelbytes;
-      
+
       if(pelbytes==2)
 	for(j=0;j<npels;j++)
 	  {
@@ -982,7 +929,7 @@ save_image (char   *filename,
 	    }
 	  npels/=2;
 	}
-      
+
       fwrite(data, pelbytes, npels, fp);
 
       gimp_progress_update ((double) (i + tileheight) / (double) height);
@@ -994,6 +941,3 @@ save_image (char   *filename,
   fclose(fp);
   return status;
 }
-
-
-
