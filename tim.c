@@ -94,14 +94,6 @@ static gint   save_image (char   *filename,
 static gint save_dialog (struct tim_save_vals *vals,
                           GimpImageType dtype,
                           gint32  image_ID);
-
-//static void   save_close_callback  (GtkWidget *widget,
-//				    gpointer   data);
-//static void   save_ok_callback     (GtkWidget *widget,
-//				    gpointer   data);
-//static void   save_toggle_update   (GtkWidget *widget,
-//				    gpointer   data);
-
 static struct tim_save_vals timvals = { TIM16 };
 
 GimpPlugInInfo PLUG_IN_INFO =
@@ -153,7 +145,6 @@ query ()
 		{ GIMP_PDB_DRAWABLE, "drawable", "Drawable to save" },
 	};
 	gint nsetclut_args = sizeof (setclut_args) / sizeof (setclut_args[0]);
-
 
   static GimpParamDef load_args[] =
   {
