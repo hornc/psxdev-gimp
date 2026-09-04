@@ -275,7 +275,8 @@ run (char    *name,
           {
             GimpImageType dtype = gimp_drawable_type (param[2].data.d_int32);
             gimp_get_data ("file-tim-save", &timvals);
-            if (! save_dialog (&timvals, dtype, param[1].data.d_int32))
+            /* Only show save dialog for RGB Actual Color bitdepths until we have something else to specify, like origins.. */
+            if (dtype == GIMP_RGB_IMAGE && ! save_dialog (&timvals, dtype, param[1].data.d_int32))
               {
                 *nreturn_vals = 1;
                 values[0].data.d_status = GIMP_PDB_CANCEL;
