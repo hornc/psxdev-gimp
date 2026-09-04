@@ -89,7 +89,8 @@ static void   run        (char    *name,
 static gint32 load_image (char   *filename);
 static gint   save_image (char   *filename,
                           gint32  image_ID,
-                          gint32  drawable_ID);
+                          gint32  drawable_ID,
+                          gint    tim_type);
 static gint save_dialog (struct tim_save_vals *vals,
                           GimpImageType dtype,
                           gint32  image_ID);
@@ -307,7 +308,7 @@ run (char    *name,
 	}
 
       *nreturn_vals = 1;
-      if (save_image (param[3].data.d_string, param[1].data.d_int32, param[2].data.d_int32))
+      if (save_image (param[3].data.d_string, param[1].data.d_int32, param[2].data.d_int32, timvals.tim_type))
 	  values[0].data.d_status = GIMP_PDB_SUCCESS;
       else
 	values[0].data.d_status = GIMP_PDB_EXECUTION_ERROR;
@@ -322,7 +323,6 @@ run (char    *name,
   {
 	gint32 image_id = param[1].data.d_int32;
 
-	
 	gint nlayers;
 	gint32 *layers;
 	int i;
@@ -330,7 +330,7 @@ run (char    *name,
 	gint width, height;
 
 	layers = gimp_image_get_layers (image_id,&nlayers);
-	
+
 	width = gimp_image_width   (image_id);
 	height = gimp_image_height (image_id);
 printf("\n\n");
@@ -368,7 +368,6 @@ printf("\n\n");
 
   else if (strcmp (name, "psx_make_clut") == 0)
   {
-
   	gint32 drawable_id = param[2].data.d_int32;	
 	GimpDrawable *drawable = gimp_drawable_get(drawable_id);
 	int width, height, tileheight, i,j,x,y;
@@ -811,7 +810,7 @@ save_dialog (struct tim_save_vals *vals,
           gimp_parasite_free (parasite);
         }
 
-      frame = gtk_frame_new ("Color Depth (Full Color)");
+      frame = gtk_frame_new ("Color Depth (Acutal Color)");
       gtk_container_set_border_width (GTK_CONTAINER (frame), 6);
       gtk_box_pack_start (GTK_BOX (content_area), frame, FALSE, FALSE, 0);
 
@@ -850,8 +849,9 @@ save_dialog (struct tim_save_vals *vals,
 
 gint
 save_image (char   *filename,
-	    gint32  image_ID,
-	    gint32  drawable_ID)
+            gint32  image_ID,
+            gint32  drawable_ID,
+            gint    tim_type)
 {
   GimpPixelRgn pixel_rgn;
   GimpDrawable *drawable;
@@ -950,27 +950,28 @@ save_image (char   *filename,
 	  clut.clut[i*8+7][0] = (i*0x421)%256;
 	  clut.clut[i*8+7][1] = (i*0x421)>>8;
 	}
-      pelbytes=1;
+      pelbytes = 1;
       break;
     case GIMP_RGB_IMAGE:
-      common.type[0] = TIM16;
-      image.next = ((width*height*2)+12);
-      image.w[0]=width%256;
-      image.w[1]=width>>8;
-      pelbytes=2;
+      common.type[0] = tim_type;
+      pelbytes = tim_type;
+      image.next = (width * height * pelbytes) + 12;
+      image.w[0] = (width * pelbytes / 2) % 256;
+      image.w[1] = (width * pelbytes / 2) >> 8;
+
       break;
     default:
       printf("TIM: unknown image type, aborting\n");
       return FALSE;
     }
-  common.id[0]=TIM;
-  image.h[0]=height%256;
-  image.h[1]=height>>8;
+  common.id[0] = TIM;
+  image.h[0] = height % 256;
+  image.h[1] = height >> 8;
 
-  image.x[0]=0;
-  image.x[1]=0;
-  image.y[0]=0;
-  image.y[1]=0;
+  image.x[0] = 0;
+  image.x[1] = 0;
+  image.y[0] = 0;
+  image.y[1] = 0;
 
   if((fp = fopen(filename, "wb")) == NULL) {
     printf("TIM: can't create \"%s\"\n", filename);
@@ -979,9 +980,9 @@ save_image (char   *filename,
 
   /* write out the various headers */
   fwrite(&common, sizeof(common), 1, fp);
-  if (common.type[0]==TIM4)
+  if (common.type[0] == TIM4)
     fwrite(&clut, sizeof(clut)-480, 1, fp);
-  else if (common.type[0]==TIM8)
+  else if (common.type[0] == TIM8)
     fwrite(&clut, sizeof(clut), 1, fp);
 
   fwrite(&image, sizeof(image), 1, fp);
