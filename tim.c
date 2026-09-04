@@ -42,6 +42,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgimp/gimp.h>
+#include <libgimp/gimpui.h>
 
 #define TIM   0x10  /* tim id */
 #define TIM4  0x08  /*  4 bpp indexed  */
@@ -110,20 +111,6 @@ MAIN ();
 static void
 query ()
 {
-	static GimpParamDef loadvram_args[] =
-	{
-		{ GIMP_PDB_INT32, "run_mode", "Interactive, non-interactive" },
-	};
-	gint nloadvram_args = sizeof (loadvram_args) / sizeof (loadvram_args[0]);
-
-	static GimpParamDef view_args[] =
-	{
-		{ GIMP_PDB_INT32, "run_mode", "Interactive, non-interactive" },
-		{ GIMP_PDB_IMAGE, "image", "Input image" },
-		{ GIMP_PDB_DRAWABLE, "drawable", "Drawable to save" },
-	};
-	gint nview_args = sizeof (view_args) / sizeof (view_args[0]);
-
 	static GimpParamDef makeclut_args[] =
 	{
 		{ GIMP_PDB_INT32, "run_mode", "Interactive, non-interactive" },
@@ -428,7 +415,7 @@ printf("\n\n");
 
   else if (strcmp (name, "psx_set_clut") == 0)
   {
-	gint32 imageid, image_id = param[1].data.d_int32;
+	gint32 image_id = param[1].data.d_int32;
 	guchar *palette;
 	gint ncolors;
 	gint i;
@@ -443,17 +430,15 @@ printf("\n\n");
 		char *filename = gimp_image_get_filename(images[i]);
 		if (strstr(filename,"palette.tim"))
 		{
-			imageid = images[i];
 			selection = gimp_image_get_selection(images[i]);
 		}
-		
+
 		g_free (filename);
 	}
 
 	if (selection==-1)
 	{
 		gimp_message("palette.tim not loaded!\n");
-	
 		return;
 	}
 
@@ -461,7 +446,7 @@ printf("\n\n");
 	GimpDrawable *drawable = gimp_drawable_get (selection);
 	int x1,y1,x2,y2;
 	GimpPixelRgn pixel_rgn;
-	
+
 	if (drawable)
 	{
 		gimp_drawable_mask_bounds (selection,&x1,&y1,&x2,&y2);
@@ -470,7 +455,6 @@ printf("\n\n");
 		gimp_pixel_rgn_get_rect (&pixel_rgn,palette,x1,y1,ncolors,1);
 		gimp_image_set_colormap (image_id,palette,ncolors);
 		g_free (palette);
-
 	}
 	gimp_drawable_detach(drawable);
 }
@@ -499,7 +483,7 @@ load_image (char *filename)
   
   int width, height, bpp=0;
   int i, j, k;
-  int pelbytes, tileheight, wbytes, bsize, npels, pels, ncols, npals;
+  int pelbytes, tileheight, npels, pels, ncols, npals;
   int badread;
   gushort tmpval;
 
@@ -552,7 +536,7 @@ load_image (char *filename)
 				 100,
 				 GIMP_NORMAL_MODE);
 
-      gimp_image_add_layer (image_ID, layer_ID, 0);
+      gimp_image_insert_layer (image_ID, layer_ID, 0, 0);
 
       drawable = gimp_drawable_get (layer_ID);
 
@@ -569,15 +553,13 @@ load_image (char *filename)
       tileheight = gimp_tile_height ();
       data = (guchar *) g_malloc (width * tileheight * pelbytes);
 
-      wbytes = width * pelbytes;
       badread = 0;
       for (i = 0; i < height; i += tileheight)
 	{
 	  tileheight = MIN (tileheight, height - i);
 
 	  npels = width * tileheight;
-	  bsize = wbytes * tileheight;
-	  
+
 	  /* Suck in the data one tileheight at a time. */
 
 	  pels = 0;
@@ -667,20 +649,20 @@ load_image (char *filename)
 
   image_ID = gimp_image_new (width, height, itype);
   gimp_image_set_filename (image_ID, filename);
-  
+
   layer_ID = gimp_layer_new (image_ID,
 			     "Background",
 			     width, height,
 			     dtype,
 			     100,
 			     GIMP_NORMAL_MODE);
-  
-  gimp_image_add_layer (image_ID, layer_ID, 0);
-  
+
+  gimp_image_insert_layer (image_ID, layer_ID, 0, 0);
+
   drawable = gimp_drawable_get (layer_ID);
-  
+
   gimp_pixel_rgn_init (&pixel_rgn, drawable, 0, 0, width, height, TRUE, FALSE);
-  
+
   pelbytes = drawable->bpp; /* bytes per pixel in the gimp */
 
   /* convert the 16bpp CLUT into a Gimp 24bpp cmap */
@@ -697,22 +679,19 @@ load_image (char *filename)
 
   gimp_image_set_colormap (image_ID, cmap, ncols);
   g_free (cmap);
-  
+
   /* Allocate the data. */
   tileheight = gimp_tile_height ();
   data = (guchar *) g_malloc (width * tileheight * pelbytes);
-  
-  wbytes = width * pelbytes;
+
   badread = 0;
   for (i = 0; i < height; i += tileheight)
     {
       tileheight = MIN (tileheight, height - i);
-      
       npels = width * tileheight;
-      bsize = wbytes * tileheight;
-      
+
       /* Suck in the data one tileheight at a time. */
-      
+
       pels = 0;
       if (badread)
 	pels = 0;
@@ -777,7 +756,7 @@ save_dialog (struct tim_save_vals *vals,
   GtkWidget *radio_16;
   GtkWidget *radio_24;
   gint       response;
-  gimp_ui_init ("gimp-psx-tim");
+  gimp_ui_init ("gimp-psx-tim", FALSE);
   dialog = gtk_dialog_new_with_buttons ("Export Image as TIM",
                                          NULL,
                                          GTK_DIALOG_MODAL,
@@ -793,7 +772,7 @@ save_dialog (struct tim_save_vals *vals,
       GtkWidget *vbox;
 
       /* load original source-depth */
-      GimpParasite *parasite = gimp_image_parasite_find (image_ID, "tim-source-depth");
+      GimpParasite *parasite = gimp_image_get_parasite (image_ID, "tim-source-depth");
       if (parasite)
         {
           guchar loaded_depth;
@@ -851,8 +830,8 @@ save_image (char   *filename,
   guint tmpval;
   int width, height;
   FILE *fp;
-  guchar *name_buf;
-  int npels, tileheight, pelbytes, bsize;
+  gchar *name_buf;
+  int npels, tileheight, pelbytes;
   int status;
 
   struct tim_common common;
@@ -869,7 +848,7 @@ save_image (char   *filename,
   width = drawable->width;
   height = drawable->height;
 
-  name_buf = (guchar *) g_malloc(strlen(filename) + 11);
+  name_buf = (gchar *) g_malloc(strlen(filename) + 11);
   sprintf(name_buf, "Saving %s:", filename);
   gimp_progress_init(name_buf);
   g_free(name_buf);
@@ -993,7 +972,6 @@ save_image (char   *filename,
       gimp_pixel_rgn_get_rect(&pixel_rgn, data, 0, i, width, tileheight);
 
       npels = width * tileheight;
-      bsize = npels * pelbytes;
 
       if(pelbytes==2)
 	for(j=0;j<npels;j++)
